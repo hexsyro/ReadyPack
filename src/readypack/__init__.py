@@ -3,4 +3,4 @@
 from readypack.logic import ReadyPackLogic, health_score, run
 
 __version__ = "0.1.0"
-__all__ = ["ReadyPackLogic", "health_score", "run", "__version__"]
+__all__ = ["ReadyPackLogic", "__version__", "health_score", "run"]

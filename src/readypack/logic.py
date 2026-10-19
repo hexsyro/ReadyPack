@@ -18,10 +18,10 @@ minor notes can't sink an otherwise good dataset. It is deterministic.
 from __future__ import annotations
 
 import math
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
-from readypack.common import ToolResult, as_str, find_id, opt_dict, opt_list
+from readypack.common import ToolResult, as_str, find_id, opt_list
 from readypack.export import build_croissant, build_datasheet, build_report_md
 
 HEALTH_WEIGHTS = {"high": 6.0, "medium": 3.0, "low": 1.0}
@@ -87,7 +87,7 @@ class ReadyPackLogic:
         }
 
         changelog = [*opt_list(options.get("changelog")), {
-            "at": datetime.now(UTC).isoformat(),
+            "at": datetime.now(timezone.utc).isoformat(),
             "actor": "readypack",
             "event": f"Packaged {len(kept_rows)} row(s); {len(dropped)} row(s) dropped per reviewed ids; "
                      f"{len(findings)} finding(s) from {len(sources)} source(s).",

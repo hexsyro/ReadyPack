@@ -12,9 +12,8 @@ from __future__ import annotations
 import csv
 import json
 import zipfile
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
 
 from readypack.common import as_str, find_id, safe_cell
 
@@ -28,7 +27,7 @@ def build_croissant(*, name: str, description: str, fields: list[str],
         "name": name,
         "description": description or "Dataset packaged by ReadyPack.",
         "version": "1.0.0",
-        "datePublished": datetime.now(UTC).date().isoformat(),
+        "datePublished": datetime.now(timezone.utc).date().isoformat(),
         "recordSet": [{
             "@type": "croissant:RecordSet",
             "name": "records",
