@@ -1,0 +1,6 @@
+id,text,language,split
+r001,The train was late again this morning.,en,train
+r002,My favourite cafe closed for renovations.,en,test
+r003,The train was late again this morning.,en,test
+r004,Ein sehr langer deutscher Satz ueber Datenqualitaet.,de,train
+r005,=SUM(A1:A9) is not text you would ship.,en,train

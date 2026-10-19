@@ -1,0 +1,16 @@
+{
+  "tool": "filtergap",
+  "version": "0.1.0",
+  "status": "success",
+  "findings": [
+    {
+      "severity": "high",
+      "field": "bot_confidence",
+      "message": "Mention scored 0.95 bot/spam confidence (threshold 0.50).",
+      "record_id": "r003",
+      "metadata": {"check": "bot_confidence", "confidence": 0.95}
+    }
+  ],
+  "warnings": ["Snapshot comparison only — no platforms were contacted by this run."],
+  "summary": {"checked": 5, "flagged": 1}
+}
