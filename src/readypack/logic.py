@@ -31,7 +31,7 @@ REVIEW_WARNING = "Review every finding before publishing — ReadyPack never sil
 
 def health_score(findings: list[dict]) -> tuple[float, str]:
     """Composite 0-100 score plus letter grade from finding severities."""
-    raw = sum(HEALTH_WEIGHTS.get(str(f.get("severity", "low")), 1.0) for f in findings)
+    raw = sum(HEALTH_WEIGHTS.get(str(f.get("severity", "low")).lower(), 1.0) for f in findings)
     score = round(100 - min(100.0, 25 * math.log10(1 + raw)), 1)
     grade = "A" if score >= 90 else "B" if score >= 75 else "C" if score >= 60 else "D" if score >= 40 else "F"
     return score, grade

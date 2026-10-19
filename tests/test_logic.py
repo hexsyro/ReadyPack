@@ -29,6 +29,10 @@ def test_health_score_one_high():
     assert health_score([finding("high")]) == (78.9, "B")
 
 
+def test_health_score_severity_is_case_insensitive():
+    assert health_score([finding("High")]) == health_score([finding("high")])
+
+
 def test_health_score_grade_bands():
     assert health_score([finding("low")])[1] == "A"
     assert health_score([finding("low")] * 5)[1] == "B"
