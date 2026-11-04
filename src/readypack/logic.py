@@ -67,7 +67,7 @@ class ReadyPackLogic:
                 "grade": grade,
                 "warnings": len(source_warnings),
             }
-            for warning in source_warnings[:2]:
+            for warning in source_warnings:
                 warnings.append(f"{tool}: {warning}")
 
         score, grade = health_score(findings)

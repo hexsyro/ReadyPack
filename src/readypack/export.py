@@ -131,7 +131,7 @@ def write_package(out_dir: str | Path, *, rows: list[dict], summary: dict,
     """Write cleaned.csv + docs into ``out_dir`` and zip them into package.zip."""
     root = Path(out_dir)
     root.mkdir(parents=True, exist_ok=True)
-    dropped = {as_str(x) for x in (drop_ids or [])}
+    dropped = {as_str(x) for x in (drop_ids or []) if as_str(x)}
 
     fields = [str(k) for k in (rows[0].keys() if rows else [])]
     kept = [row for row in rows if _row_id(row) not in dropped]
