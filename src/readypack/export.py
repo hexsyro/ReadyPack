@@ -129,6 +129,7 @@ def build_report_md(*, name: str, health: dict, sources: dict[str, dict],
 def write_package(out_dir: str | Path, *, rows: list[dict], summary: dict,
                   drop_ids: list[str] | None = None) -> Path:
     """Write cleaned.csv + docs into ``out_dir`` and zip them into package.zip."""
+    rows = list(rows)
     root = Path(out_dir)
     root.mkdir(parents=True, exist_ok=True)
     dropped = {as_str(x) for x in (drop_ids or []) if as_str(x)}

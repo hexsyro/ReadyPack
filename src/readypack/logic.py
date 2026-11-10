@@ -41,6 +41,7 @@ class ReadyPackLogic:
     """Packaging orchestrator: aggregate findings, score, document, package."""
 
     def run(self, rows: list[dict], options: dict[str, Any]) -> ToolResult:
+        rows = list(rows)
         name = as_str(options.get("name") or options.get("dataset_name")) or "dataset"
         description = as_str(options.get("description"))
         reports = [r for r in (options.get("reports") or []) if isinstance(r, dict)]
