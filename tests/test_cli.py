@@ -51,14 +51,18 @@ def test_out_writes_package(tmp_path):
     f = write_file(tmp_path, "findings.json", FINDINGS_JSON)
     out = tmp_path / "pack"
     assert main([str(p), "--findings", str(f), "--drop-id", "r1", "--name", "demo", "--out", str(out)]) == 0
-    for filename in ("cleaned.csv", "datasheet.md", "croissant.json", "changelog.json", "report.md", "package.zip"):
+    for filename in ("cleaned.csv", "datasheet.md", "datasheet.json", "croissant.json", "dataset.jsonld",
+                     "findings.json", "changelog.json", "report.md", "run.json", "package.zip"):
         assert (out / filename).exists()
     rows = list(csv.DictReader((out / "cleaned.csv").read_text(encoding="utf-8").splitlines()))
     assert {r["id"] for r in rows} == {"r2", "r3"}
     text = (out / "cleaned.csv").read_text(encoding="utf-8")
     assert "'=SUM(A1)" in text
     with zipfile.ZipFile(out / "package.zip") as zf:
-        assert set(zf.namelist()) == {"cleaned.csv", "datasheet.md", "croissant.json", "changelog.json", "report.md"}
+        assert set(zf.namelist()) == {
+            "cleaned.csv", "datasheet.md", "datasheet.json", "croissant.json", "dataset.jsonld",
+            "findings.json", "changelog.json", "report.md", "run.json",
+        }
 
 
 def test_config_file(tmp_path, capsys):

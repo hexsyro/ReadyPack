@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from readypack import __version__
-from readypack.common import SEVERITY_RANK, load_report, load_rows
+from readypack.common import SEVERITY_RANK, load_report, load_rows, validate_options
 from readypack.export import write_package
 from readypack.logic import ReadyPackLogic
 from readypack.output import render, worst_severity
@@ -69,8 +69,9 @@ def _merge_options(args: argparse.Namespace) -> dict[str, Any]:
     options: dict[str, Any] = {}
     if args.config:
         parsed = json.loads(Path(args.config).read_text(encoding="utf-8"))
-        if not isinstance(parsed, dict):
-            raise ValueError(f"{args.config}: config must be a JSON object")
+        errors = validate_options(parsed)
+        if errors:
+            raise ValueError(f"{args.config}: invalid config value: {'; '.join(errors)}")
         options.update(parsed)
     reports = [load_report(path) for path in args.findings]
     if reports:
@@ -81,6 +82,9 @@ def _merge_options(args: argparse.Namespace) -> dict[str, Any]:
         options["description"] = args.description
     if args.drop_id:
         options["drop_ids"] = list(options.get("drop_ids") or []) + args.drop_id
+    errors = validate_options(options)
+    if errors:
+        raise ValueError(f"invalid config value: {'; '.join(errors)}")
     return options
 
 
@@ -100,16 +104,24 @@ def main(argv: list[str] | None = None) -> int:
     except (OSError, ValueError) as exc:
         print(f"{TOOL}: {exc}", file=sys.stderr)
         return 2
-    result = ReadyPackLogic().run(rows, options)
+    try:
+        result = ReadyPackLogic().run(rows, options)
+    except (TypeError, ValueError) as exc:
+        print(f"{TOOL}: invalid config value: {exc}", file=sys.stderr)
+        return 2
+    run_json = render(result, "json", tool=TOOL, version=__version__)
     if args.out:
         try:
-            archive = write_package(args.out, rows=rows, summary=result.summary,
-                                    drop_ids=options.get("drop_ids"))
-        except OSError as exc:
+            archive = write_package(
+                args.out, rows=rows, summary=result.summary,
+                drop_ids=options.get("drop_ids"), extra_files={"run.json": run_json},
+            )
+        except (OSError, ValueError) as exc:
             print(f"{TOOL}: could not write package: {exc}", file=sys.stderr)
             return 2
-        print(f"{TOOL}: package written to {archive}")
-    text = render(result, args.format, tool=TOOL, version=__version__)
+        # Keep stdout clean: --format json must remain parseable.
+        print(f"{TOOL}: package written to {archive}", file=sys.stderr)
+    text = run_json if args.format == "json" else render(result, args.format, tool=TOOL, version=__version__)
     if args.output:
         Path(args.output).write_text(text, encoding="utf-8")
     else:

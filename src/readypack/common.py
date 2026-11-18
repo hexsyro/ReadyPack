@@ -19,6 +19,20 @@ from pathlib import Path
 from typing import Any
 
 SEVERITY_RANK = {"low": 1, "medium": 2, "high": 3}
+RESULT_SCHEMA_VERSION = "1.1"
+
+# Option types accepted by the library/CLI. Config values of the wrong type are
+# rejected by the CLI with exit 2; the library coerces them defensively so a
+# malformed value can never raise out of ``run()``.
+OPTION_TYPES: dict[str, tuple[type, ...]] = {
+    "name": (str,),
+    "dataset_name": (str,),
+    "description": (str,),
+    "version_tag": (str,),
+    "reports": (list, tuple),
+    "drop_ids": (str, list, tuple),
+    "changelog": (str, list, tuple),
+}
 
 
 @dataclass
@@ -210,6 +224,81 @@ def opt_list(value: Any) -> list[str]:
     if isinstance(value, (list, tuple, set)):
         return [str(v) for v in value]
     return [str(value)]
+
+
+def opt_items(value: Any) -> list[Any]:
+    """Normalize a list-ish option while preserving the element types."""
+    if value is None:
+        return []
+    if isinstance(value, (list, tuple, set)):
+        return list(value)
+    return [value]
+
+
+def opt_str(value: Any, default: str = "") -> str:
+    """Coerce an option value to a trimmed string without ever raising."""
+    if value is None or isinstance(value, (dict, list, tuple, set)):
+        return default
+    return str(value).strip()
+
+
+def all_fields(rows: list[dict]) -> list[str]:
+    """Union of keys across every row, in deterministic first-seen order."""
+    fields: list[str] = []
+    seen: set[str] = set()
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        for key in row:
+            name = str(key)
+            if name not in seen:
+                seen.add(name)
+                fields.append(name)
+    return fields
+
+
+def validate_options(options: Any) -> list[str]:
+    """Return clear errors for config values whose type is wrong.
+
+    The library coerce-helpers make bad values harmless; this strict check lets
+    the CLI fail fast with exit 2 instead of silently ignoring a typo'd config.
+    """
+    if options is None:
+        return []
+    if not isinstance(options, dict):
+        return ["config must be a JSON object"]
+
+    errors: list[str] = []
+    for key, expected in OPTION_TYPES.items():
+        if key in options and not isinstance(options[key], expected):
+            want = " or ".join(t.__name__ for t in expected)
+            got = type(options[key]).__name__
+            errors.append(f"{key!r} must be {want}, got {got}")
+
+    reports = options.get("reports")
+    if isinstance(reports, (list, tuple)):
+        for index, report in enumerate(reports):
+            if not isinstance(report, dict):
+                errors.append(f"reports[{index}] must be an object, got {type(report).__name__}")
+                continue
+            nested = {
+                "findings": (list, tuple),
+                "warnings": (str, list, tuple),
+                "summary": (dict,),
+            }
+            for subkey, expected in nested.items():
+                if subkey in report and not isinstance(report[subkey], expected):
+                    want = " or ".join(t.__name__ for t in expected)
+                    got = type(report[subkey]).__name__
+                    errors.append(f"reports[{index}].{subkey} must be {want}, got {got}")
+            findings = report.get("findings")
+            if isinstance(findings, (list, tuple)):
+                for offset, item in enumerate(findings):
+                    if not isinstance(item, dict):
+                        errors.append(
+                            f"reports[{index}].findings[{offset}] must be an object, got {type(item).__name__}"
+                        )
+    return errors
 
 
 # ---------------------------------------------------------------------------
