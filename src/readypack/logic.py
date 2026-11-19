@@ -134,8 +134,10 @@ class ReadyPackLogic:
         dropped = [rid for rid in row_ids if rid in drop_ids]
 
         confidence = (
-            "low" if any(s["status"] == "error" for s in sources.values())
-            else "medium" if report_warning_count
+            "low"
+            if any(s["status"] == "error" for s in sources.values())
+            else "medium"
+            if report_warning_count
             else "high"
         )
         health = {
@@ -157,17 +159,21 @@ class ReadyPackLogic:
         generated_at = datetime.now(timezone.utc).isoformat()
         changelog = [*opt_items(options.get("changelog"))]
         for rid in sorted(set(dropped)):
-            changelog.append({
+            changelog.append(
+                {
+                    "at": generated_at,
+                    "actor": "readypack",
+                    "event": f"Removed row {rid!r} per reviewed drop id.",
+                }
+            )
+        changelog.append(
+            {
                 "at": generated_at,
                 "actor": "readypack",
-                "event": f"Removed row {rid!r} per reviewed drop id.",
-            })
-        changelog.append({
-            "at": generated_at,
-            "actor": "readypack",
-            "event": f"Packaged {len(kept_rows)} row(s); {len(dropped)} row(s) dropped per reviewed ids; "
-                     f"{len(findings)} finding(s) from {len(sources)} source(s).",
-        })
+                "event": f"Packaged {len(kept_rows)} row(s); {len(dropped)} row(s) dropped per reviewed ids; "
+                f"{len(findings)} finding(s) from {len(sources)} source(s).",
+            }
+        )
 
         datasheet = build_datasheet(
             name=name,
@@ -282,8 +288,11 @@ def _fair_assessment(croissant: dict, datasheet: str, confidence: str) -> dict[s
             "fields": "summary.croissant.dct:conformsTo, summary.dataset_jsonld",
         },
         "R": {
-            "status": "pass" if croissant.get("wasGeneratedBy") and croissant.get("license") and datasheet
-                     else "partial" if datasheet else "fail",
+            "status": "pass"
+            if croissant.get("wasGeneratedBy") and croissant.get("license") and datasheet
+            else "partial"
+            if datasheet
+            else "fail",
             "fields": "summary.datasheet, summary.croissant.wasGeneratedBy, summary.croissant.license",
         },
     }

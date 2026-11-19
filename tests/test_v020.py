@@ -157,11 +157,14 @@ def test_croissant_full_metadata_and_checksum(tmp_path):
         {"id": "r1", "score": "3.5", "active": "yes", "when": "2026-11-19", "note": "hi"},
         {"id": "r2", "score": "4.0", "active": "no", "when": "2026-11-20", "note": "yo"},
     ]
-    result = run(rows, {
-        "name": "demo",
-        "version_tag": "9.9.9",
-        "reports": [report("filtergap", [finding("high")])],
-    })
+    result = run(
+        rows,
+        {
+            "name": "demo",
+            "version_tag": "9.9.9",
+            "reports": [report("filtergap", [finding("high")])],
+        },
+    )
     summary = result.summary
     croissant = summary["croissant"]
     assert croissant["dct:conformsTo"].startswith("https://mlcommons.org/croissant")
@@ -169,11 +172,17 @@ def test_croissant_full_metadata_and_checksum(tmp_path):
     assert croissant["generatedAt"]
     types = {f["name"]: f["dataType"] for f in croissant["recordSet"][0]["field"]}
     assert types == {
-        "id": "sc:Text", "score": "sc:Number", "active": "sc:Boolean",
-        "when": "sc:Date", "note": "sc:Text",
+        "id": "sc:Text",
+        "score": "sc:Number",
+        "active": "sc:Boolean",
+        "when": "sc:Date",
+        "note": "sc:Text",
     }
     assert croissant["wasGeneratedBy"][0] == {
-        "tool": "filtergap", "version": "0.3.0", "status": "success", "findings": 1,
+        "tool": "filtergap",
+        "version": "0.3.0",
+        "status": "success",
+        "findings": 1,
     }
     assert croissant["wasAttributedTo"][0]["name"] == "filtergap"
     assert "sha256" not in croissant["distribution"][0]
@@ -198,11 +207,11 @@ def test_croissant_defaults_and_backward_compatible_builder():
 
 def test_machine_readable_documents(tmp_path):
     rows = [{"id": "r1", "text": "x"}]
-    summary = run(rows, {"name": "demo", "version_tag": "4.2.0",
-                         "reports": [report("filtergap", [finding("high")])]}).summary
+    summary = run(
+        rows, {"name": "demo", "version_tag": "4.2.0", "reports": [report("filtergap", [finding("high")])]}
+    ).summary
     datasheet = json.loads(summary["datasheet_json"])
-    for section in ("Motivation", "Composition", "Collection", "Preprocessing", "Uses", "Distribution",
-                    "Maintenance"):
+    for section in ("Motivation", "Composition", "Collection", "Preprocessing", "Uses", "Distribution", "Maintenance"):
         assert section in datasheet
     assert datasheet["Composition"]["audits"]["filtergap"]["findings"] == 1
     jsonld = json.loads(summary["dataset_jsonld"])
@@ -249,8 +258,7 @@ def test_extra_files_written_and_zipped(tmp_path):
     rows = [{"id": "r1", "text": "x"}]
     summary = run(rows, {}).summary
     out = tmp_path / "pack"
-    write_package(out, rows=rows, summary=summary,
-                  extra_files={"run.json": '{"ok": true}', "meta/notes.txt": "hello"})
+    write_package(out, rows=rows, summary=summary, extra_files={"run.json": '{"ok": true}', "meta/notes.txt": "hello"})
     assert json.loads((out / "run.json").read_text(encoding="utf-8")) == {"ok": True}
     assert (out / "meta" / "notes.txt").read_text(encoding="utf-8") == "hello"
     with zipfile.ZipFile(out / "package.zip") as zf:
@@ -263,5 +271,4 @@ def test_extra_files_reject_traversal_and_absolute(tmp_path):
     with pytest.raises(ValueError, match="\\.\\."):
         write_package(tmp_path / "pack", rows=[], summary={}, extra_files={"../evil.txt": "x"})
     with pytest.raises(ValueError, match="relative path"):
-        write_package(tmp_path / "pack", rows=[], summary={},
-                      extra_files={str(tmp_path / "absolute.txt"): "x"})
+        write_package(tmp_path / "pack", rows=[], summary={}, extra_files={str(tmp_path / "absolute.txt"): "x"})

@@ -55,30 +55,42 @@ def _infer_data_type(values: list[Any]) -> str:
     return "sc:Text"
 
 
-def build_croissant(*, name: str, description: str, fields: list[str], row_count: int,
-                    datasheet: str = "", version_tag: str = "0.2.0",
-                    generated_at: str | None = None, sample_rows: list[dict] | None = None,
-                    provenance: list[dict] | None = None,
-                    checksums: dict[str, str] | None = None) -> dict:
+def build_croissant(
+    *,
+    name: str,
+    description: str,
+    fields: list[str],
+    row_count: int,
+    datasheet: str = "",
+    version_tag: str = "0.2.0",
+    generated_at: str | None = None,
+    sample_rows: list[dict] | None = None,
+    provenance: list[dict] | None = None,
+    checksums: dict[str, str] | None = None,
+) -> dict:
     """Croissant 1.1-style metadata with inferred fields and PROV-O provenance."""
     timestamp = generated_at or datetime.now(timezone.utc).isoformat()
     rows = sample_rows or []
     fields_meta = []
     for field in fields:
         values = [row.get(field) for row in rows if isinstance(row, dict) and field in row]
-        fields_meta.append({
-            "@type": "croissant:Field",
-            "name": field,
-            "dataType": _infer_data_type(values),
-        })
+        fields_meta.append(
+            {
+                "@type": "croissant:Field",
+                "name": field,
+                "dataType": _infer_data_type(values),
+            }
+        )
 
     provenance = [dict(record) for record in (provenance or []) if isinstance(record, dict)]
-    distributions = [{
-        "@type": "sc:FileObject",
-        "name": "cleaned.csv",
-        "contentUrl": "cleaned.csv",
-        "encodingFormat": "text/csv",
-    }]
+    distributions = [
+        {
+            "@type": "sc:FileObject",
+            "name": "cleaned.csv",
+            "contentUrl": "cleaned.csv",
+            "encodingFormat": "text/csv",
+        }
+    ]
     if checksums:
         for distribution in distributions:
             digest = checksums.get(distribution["name"])
@@ -101,13 +113,15 @@ def build_croissant(*, name: str, description: str, fields: list[str], row_count
         "version": version_tag,
         "datePublished": timestamp[:10],
         "generatedAt": timestamp,
-        "recordSet": [{
-            "@type": "croissant:RecordSet",
-            "name": "records",
-            "description": datasheet[:500] if datasheet else "Packaged records.",
-            "field": fields_meta,
-            "data": [{"recordCount": row_count}],
-        }],
+        "recordSet": [
+            {
+                "@type": "croissant:RecordSet",
+                "name": "records",
+                "description": datasheet[:500] if datasheet else "Packaged records.",
+                "field": fields_meta,
+                "data": [{"recordCount": row_count}],
+            }
+        ],
         "distribution": distributions,
         "wasGeneratedBy": provenance,
         "wasAttributedTo": [
@@ -123,8 +137,16 @@ def build_croissant(*, name: str, description: str, fields: list[str], row_count
     }
 
 
-def build_datasheet(*, name: str, description: str, fields: list[str], row_count: int,
-                    original_count: int, sources: dict[str, dict], warnings: list[str]) -> str:
+def build_datasheet(
+    *,
+    name: str,
+    description: str,
+    fields: list[str],
+    row_count: int,
+    original_count: int,
+    sources: dict[str, dict],
+    warnings: list[str],
+) -> str:
     """Markdown datasheet (dataset card) for the packaged dataset."""
     lines = [
         f"# Datasheet: {name}",
@@ -168,10 +190,20 @@ def build_datasheet(*, name: str, description: str, fields: list[str], row_count
     return "\n".join(lines)
 
 
-def build_datasheet_json(*, name: str, description: str, fields: list[str], row_count: int,
-                         original_count: int, sources: dict[str, dict], warnings: list[str],
-                         dropped_ids: list[str] | None = None, unknown_drop_ids: list[str] | None = None,
-                         version: str = "0.2.0", generated_at: str | None = None) -> str:
+def build_datasheet_json(
+    *,
+    name: str,
+    description: str,
+    fields: list[str],
+    row_count: int,
+    original_count: int,
+    sources: dict[str, dict],
+    warnings: list[str],
+    dropped_ids: list[str] | None = None,
+    unknown_drop_ids: list[str] | None = None,
+    version: str = "0.2.0",
+    generated_at: str | None = None,
+) -> str:
     """Machine-readable Datasheets-for-Datasets document (JSON text)."""
     timestamp = generated_at or datetime.now(timezone.utc).isoformat()
     document = {
@@ -206,8 +238,16 @@ def build_datasheet_json(*, name: str, description: str, fields: list[str], row_
         "Distribution": {
             "formats": ["text/csv", "application/json"],
             "license": LICENSE_PLACEHOLDER,
-            "files": ["cleaned.csv", "datasheet.md", "datasheet.json", "dataset.jsonld", "findings.json",
-                      "croissant.json", "changelog.json", "report.md"],
+            "files": [
+                "cleaned.csv",
+                "datasheet.md",
+                "datasheet.json",
+                "dataset.jsonld",
+                "findings.json",
+                "croissant.json",
+                "changelog.json",
+                "report.md",
+            ],
         },
         "Maintenance": {
             "version": version,
@@ -218,10 +258,17 @@ def build_datasheet_json(*, name: str, description: str, fields: list[str], row_
     return json.dumps(document, indent=2, ensure_ascii=False)
 
 
-def build_dataset_jsonld(*, name: str, description: str, fields: list[str], row_count: int,
-                         version: str = "0.2.0", generated_at: str | None = None,
-                         sources: dict[str, dict] | None = None,
-                         checksums: dict[str, str] | None = None) -> str:
+def build_dataset_jsonld(
+    *,
+    name: str,
+    description: str,
+    fields: list[str],
+    row_count: int,
+    version: str = "0.2.0",
+    generated_at: str | None = None,
+    sources: dict[str, dict] | None = None,
+    checksums: dict[str, str] | None = None,
+) -> str:
     """schema.org/Dataset JSON-LD describing the packaged dataset (JSON text)."""
     timestamp = generated_at or datetime.now(timezone.utc).isoformat()
     distribution: dict[str, Any] = {
@@ -267,9 +314,16 @@ def build_findings_json(findings: list[dict]) -> str:
     return json.dumps(normalized, indent=2, ensure_ascii=False, default=str)
 
 
-def build_report_md(*, name: str, health: dict, sources: dict[str, dict],
-                    kept: int, dropped: int, findings: int,
-                    fair: dict | None = None) -> str:
+def build_report_md(
+    *,
+    name: str,
+    health: dict,
+    sources: dict[str, dict],
+    kept: int,
+    dropped: int,
+    findings: int,
+    fair: dict | None = None,
+) -> str:
     """Human-readable package report, including a FAIR self-assessment."""
     lines = [
         f"# ReadyPack report: {name}",
@@ -311,9 +365,7 @@ def build_report_md(*, name: str, health: dict, sources: dict[str, dict],
     }
     for principle in ("F", "A", "I", "R"):
         info = assessment.get(principle, {})
-        lines.append(
-            f"| {labels[principle]} | {info.get('status', 'partial')} | {info.get('fields', '—')} |"
-        )
+        lines.append(f"| {labels[principle]} | {info.get('status', 'partial')} | {info.get('fields', '—')} |")
     lines += [
         "",
         "## What gets packaged",
@@ -334,8 +386,12 @@ def build_report_md(*, name: str, health: dict, sources: dict[str, dict],
 def _safe_extra_path(root: Path, name: str) -> Path:
     """Resolve an extra-file name inside ``root``; reject traversal and absolutes."""
     candidate = Path(name)
-    if not name or candidate.is_absolute() or any(part == ".." for part in candidate.parts) \
-            or candidate.name in {"", ".", ".."}:
+    if (
+        not name
+        or candidate.is_absolute()
+        or any(part == ".." for part in candidate.parts)
+        or candidate.name in {"", ".", ".."}
+    ):
         raise ValueError(f"extra file name must be a relative path without '..': {name!r}")
     target = root / candidate
     try:
@@ -345,9 +401,14 @@ def _safe_extra_path(root: Path, name: str) -> Path:
     return target
 
 
-def write_package(out_dir: str | Path, *, rows: list[dict], summary: dict,
-                  drop_ids: list[str] | None = None,
-                  extra_files: dict[str, str] | None = None) -> Path:
+def write_package(
+    out_dir: str | Path,
+    *,
+    rows: list[dict],
+    summary: dict,
+    drop_ids: list[str] | None = None,
+    extra_files: dict[str, str] | None = None,
+) -> Path:
     """Write cleaned.csv + docs into ``out_dir`` and zip them into package.zip."""
     rows = list(rows)
     root = Path(out_dir)
@@ -401,14 +462,22 @@ def write_package(out_dir: str | Path, *, rows: list[dict], summary: dict,
     datasheet_json = summary.get("datasheet_json")
     if not isinstance(datasheet_json, str) or not datasheet_json:
         datasheet_json = build_datasheet_json(
-            name=name, description=as_str(summary.get("description")), fields=fields,
-            row_count=row_count, original_count=original_count, sources=sources, warnings=warnings,
+            name=name,
+            description=as_str(summary.get("description")),
+            fields=fields,
+            row_count=row_count,
+            original_count=original_count,
+            sources=sources,
+            warnings=warnings,
         )
     jsonld_text = summary.get("dataset_jsonld")
     if not isinstance(jsonld_text, str) or not jsonld_text:
         jsonld_text = build_dataset_jsonld(
-            name=name, description=as_str(summary.get("description")), fields=fields,
-            row_count=row_count, checksums={"cleaned.csv": checksum},
+            name=name,
+            description=as_str(summary.get("description")),
+            fields=fields,
+            row_count=row_count,
+            checksums={"cleaned.csv": checksum},
         )
     findings_json = summary.get("findings_json")
     if not isinstance(findings_json, str) or not findings_json:

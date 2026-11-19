@@ -113,8 +113,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.out:
         try:
             archive = write_package(
-                args.out, rows=rows, summary=result.summary,
-                drop_ids=options.get("drop_ids"), extra_files={"run.json": run_json},
+                args.out,
+                rows=rows,
+                summary=result.summary,
+                drop_ids=options.get("drop_ids"),
+                extra_files={"run.json": run_json},
             )
         except (OSError, ValueError) as exc:
             print(f"{TOOL}: could not write package: {exc}", file=sys.stderr)

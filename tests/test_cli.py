@@ -17,15 +17,24 @@ def write_file(tmp_path, name, content):
 
 DATA_CSV = "id,text,split\nr1,hello,train\nr2,world,test\nr3,=SUM(A1),train\n"
 
-FINDINGS_JSON = json.dumps({
-    "tool": "filtergap",
-    "version": "0.1.0",
-    "status": "success",
-    "findings": [{"severity": "high", "field": "bot_confidence", "message": "bot",
-                  "record_id": "r1", "metadata": {"check": "bot_confidence"}}],
-    "warnings": [],
-    "summary": {},
-})
+FINDINGS_JSON = json.dumps(
+    {
+        "tool": "filtergap",
+        "version": "0.1.0",
+        "status": "success",
+        "findings": [
+            {
+                "severity": "high",
+                "field": "bot_confidence",
+                "message": "bot",
+                "record_id": "r1",
+                "metadata": {"check": "bot_confidence"},
+            }
+        ],
+        "warnings": [],
+        "summary": {},
+    }
+)
 
 
 def test_json_output(tmp_path, capsys):
@@ -51,8 +60,18 @@ def test_out_writes_package(tmp_path):
     f = write_file(tmp_path, "findings.json", FINDINGS_JSON)
     out = tmp_path / "pack"
     assert main([str(p), "--findings", str(f), "--drop-id", "r1", "--name", "demo", "--out", str(out)]) == 0
-    for filename in ("cleaned.csv", "datasheet.md", "datasheet.json", "croissant.json", "dataset.jsonld",
-                     "findings.json", "changelog.json", "report.md", "run.json", "package.zip"):
+    for filename in (
+        "cleaned.csv",
+        "datasheet.md",
+        "datasheet.json",
+        "croissant.json",
+        "dataset.jsonld",
+        "findings.json",
+        "changelog.json",
+        "report.md",
+        "run.json",
+        "package.zip",
+    ):
         assert (out / filename).exists()
     rows = list(csv.DictReader((out / "cleaned.csv").read_text(encoding="utf-8").splitlines()))
     assert {r["id"] for r in rows} == {"r2", "r3"}
@@ -60,8 +79,15 @@ def test_out_writes_package(tmp_path):
     assert "'=SUM(A1)" in text
     with zipfile.ZipFile(out / "package.zip") as zf:
         assert set(zf.namelist()) == {
-            "cleaned.csv", "datasheet.md", "datasheet.json", "croissant.json", "dataset.jsonld",
-            "findings.json", "changelog.json", "report.md", "run.json",
+            "cleaned.csv",
+            "datasheet.md",
+            "datasheet.json",
+            "croissant.json",
+            "dataset.jsonld",
+            "findings.json",
+            "changelog.json",
+            "report.md",
+            "run.json",
         }
 
 

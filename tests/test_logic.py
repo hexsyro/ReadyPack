@@ -17,8 +17,13 @@ def report(tool, findings, warnings=None, summary=None):
 
 
 def finding(severity, record_id="r1"):
-    return {"severity": severity, "field": "bot_confidence", "message": "x",
-            "record_id": record_id, "metadata": {"check": "c"}}
+    return {
+        "severity": severity,
+        "field": "bot_confidence",
+        "message": "x",
+        "record_id": record_id,
+        "metadata": {"check": "c"},
+    }
 
 
 def test_health_score_empty_is_perfect():
@@ -49,8 +54,7 @@ def test_health_score_is_log_scaled_not_linear():
 
 def test_aggregates_and_tags_source():
     rows = [{"id": "r1", "text": "hello"}]
-    reports = [report("filtergap", [finding("high", "r1")]),
-               report("linguacheck", [finding("low", "r1")])]
+    reports = [report("filtergap", [finding("high", "r1")]), report("linguacheck", [finding("low", "r1")])]
     result = run(rows, {"reports": reports})
     assert len(result.findings) == 2
     audits = {f["metadata"]["audit"] for f in result.findings}
@@ -67,8 +71,7 @@ def test_per_source_health():
 
 
 def test_summary_carries_documents():
-    result = run([{"id": "r1", "text": "x"}], {"reports": [report("filtergap", [finding("high")])],
-                                               "name": "demo"})
+    result = run([{"id": "r1", "text": "x"}], {"reports": [report("filtergap", [finding("high")])], "name": "demo"})
     summary = result.summary
     assert summary["health_score"]["score"] < 100
     assert "# Datasheet: demo" in summary["datasheet"]
