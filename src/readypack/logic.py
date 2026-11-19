@@ -219,7 +219,7 @@ class ReadyPackLogic:
             sources=sources,
         )
         findings_json = build_findings_json(findings)
-        fair = _fair_assessment(croissant, datasheet, confidence)
+        fair = _fair_assessment(croissant, datasheet)
         report_md = build_report_md(
             name=name,
             health=health,
@@ -271,7 +271,7 @@ def _provenance_record(source: dict) -> dict:
     }
 
 
-def _fair_assessment(croissant: dict, datasheet: str, confidence: str) -> dict[str, dict]:
+def _fair_assessment(croissant: dict, datasheet: str) -> dict[str, dict]:
     """Small, honest FAIR self-assessment; every rating cites its evidence."""
     distribution = croissant.get("distribution") or []
     return {

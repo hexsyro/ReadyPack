@@ -58,3 +58,32 @@ include = ["src"]
 extraPaths = ["src"]
 pythonVersion = "3.10"
 typeCheckingMode = "basic"
+
+
+[tool.pylint.format]
+# Keep Pylint consistent with the 120-character limit used by Ruff.
+max-line-length = 120
+
+[tool.pylint."messages control"]
+# ReadyPack uses Ruff for style. These Pylint-only rules mandate docstrings on
+# every tiny helper/test and penalize intentionally data-heavy exporter APIs.
+disable = [
+  "missing-module-docstring",
+  "missing-class-docstring",
+  "missing-function-docstring",
+  "too-many-arguments",
+  "too-many-locals",
+  "too-many-branches",
+  "too-many-statements",
+  "too-many-return-statements",
+  "too-few-public-methods",
+  "duplicate-code",
+  "broad-exception-caught",
+  "protected-access",
+  "too-many-positional-arguments",
+  "too-many-instance-attributes",
+]
+
+[tool.pylint.typecheck]
+# pytest is a dev dependency, not a runtime dependency.
+ignored-modules = ["pytest"]

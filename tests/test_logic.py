@@ -90,7 +90,7 @@ def test_drop_ids_removes_rows():
 
 def test_no_reports_documents_absence():
     result = run([{"id": "r1", "text": "a"}], {})
-    assert result.findings == []
+    assert not result.findings
     assert "No audit reports were supplied" in result.summary["datasheet"]
 
 
